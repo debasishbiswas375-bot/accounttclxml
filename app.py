@@ -2,44 +2,29 @@ import solara
 import os
 from supabase import create_client
 
-# 1. Connect to Supabase
+# Connect using the private secrets we set up
 supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
-
-# 2. State Management
-user_id = solara.reactive(None)
-user_role = solara.reactive("user")
-
-@solara.component
-def AdminInterface():
-    with solara.Sidebar():
-        solara.Markdown("### Admin Panel")
-        solara.Button("Manage Users")
-        solara.Button("Global Settings")
-        
-    with solara.Column():
-        solara.Header("Control Center")
-        solara.Success("Status: Operational")
-        # Here you can add the "Plan Manager" we discussed!
-
-@solara.component
-def UserInterface():
-    with solara.Column(align="center"):
-        solara.Header("User Dashboard")
-        solara.Info("Welcome! You have successfully claimed your Signup Reward.")
 
 @solara.component
 def Page():
-    # Simple check: If not logged in, show login buttons
-    if not user_id.value:
-        with solara.Column(align="center"):
-            solara.Markdown("# Professional Portal")
-            solara.Button("Login as Admin", on_click=lambda: (user_role.set("admin"), user_id.set("123")))
-            solara.Button("Login as User", on_click=lambda: (user_role.set("user"), user_id.set("456")))
-    else:
-        # The Switch: Show different UI based on role
-        if user_role.value == "admin":
-            AdminInterface()
+    # Let's check who is logged in (Simulated for this step)
+    current_email = "admin@example.com" 
+    
+    # Check the database for the role
+    user_data = supabase.table("profiles").select("role").eq("email", current_email).single().execute()
+    role = user_data.data.get("role") if user_data.data else "user"
+
+    with solara.Column(align="center"):
+        solara.Header("Expert Accounting System")
+        
+        if role == "admin":
+            with solara.Card("ADMIN CONTROL PANEL", style={"background-color": "#f0f8ff"}):
+                solara.Markdown("### Change Global Signup Bonus")
+                solara.Success("Status: Database Connected")
+                solara.Button("Set Bonus to 500 Credits", color="primary")
         else:
-            UserInterface()
+            with solara.Card("USER DASHBOARD"):
+                solara.Info(f"Welcome, {current_email}!")
+                solara.Markdown("Your current balance: **100 Credits**")
 
 Page()
